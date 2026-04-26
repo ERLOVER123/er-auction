@@ -79,7 +79,9 @@ socket.on('timerUpdate', (t) => {
     const timerEl = document.getElementById('timer');
     timerEl.innerText = t;
     timerEl.style.color = (t <= 5) ? "#ff0000" : "#e74c3c";
-    timerEl.style.fontSize = (t <= 5) ? "4.5em" : "3.5em";
+    
+    // font-size 대신 transform: scale()을 사용하여 주변 UI를 밀어내지 않음 (1.2배 확대)
+    timerEl.style.transform = (t <= 5) ? "scale(1.2)" : "scale(1)";
 });
 
 socket.on('systemMsg', (m) => {
