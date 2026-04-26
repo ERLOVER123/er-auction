@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>8인 실시간 경매</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="login-area" class="box">
+        <h2>경매 시스템</h2>
+        <div style="margin-bottom: 15px;">
+            <input type="checkbox" id="isAdminCheck" onchange="document.getElementById('p-form').style.display = this.checked ? 'none' : 'block'; document.getElementById('a-form').style.display = this.checked ? 'block' : 'none';"> 
+            <label for="isAdminCheck">방장 접속</label>
+        </div>
+        <div id="p-form"><input type="text" id="nick" placeholder="닉네임"></div>
+        <div id="a-form" style="display:none;"><input type="password" id="pw" placeholder="비밀번호(1234)"></div>
+        <button onclick="enter()" style="margin-top:15px; padding:10px 30px;">입장</button>
+    </div>
+
+    <div id="auction-area" class="box" style="display:none;">
+        <div class="item-title" id="itemTitle">경매 준비 중</div>
+        
+        <div class="timer" id="timer">00</div>
+        
+        <div class="current-bid-box">
+            현재 최고가: <strong id="curBid">0</strong><br>
+            <span style="font-size: 0.8em;">(입찰자: <span id="curWinner">-</span>)</span>
+        </div>
+
+        <div id="players-grid"></div>
+
+        <div id="user-ui" style="margin-top:20px;">
+            <div class="quick-bid-row">
+                <button class="q-btn" onclick="add(5)">+5</button>
+                <button class="q-btn" onclick="add(10)">+10</button>
+                <button class="q-btn" onclick="add(100)">+100</button>
+                <button class="q-btn" onclick="document.getElementById('bidInput').value=''">C</button>
+            </div>
+            <input type="number" id="bidInput" placeholder="금액">
+            <button id="bidBtn" onclick="sendBid()">입찰하기</button>
+        </div>
+
+        <div id="admin-ui" class="admin-box">
+            <button class="admin-btn" onclick="socket.emit('startAuction')">경매 시작</button>
+            <button class="admin-btn skip-btn" onclick="socket.emit('skipAuction')">현재 라운드 스킵</button>
+        </div>
+    </div>
+
+    <div id="messages" class="box"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

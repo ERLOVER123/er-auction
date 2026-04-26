@@ -1,0 +1,29 @@
+body { font-family: 'Malgun Gothic', sans-serif; text-align: center; background-color: #f0f2f5; margin: 0; padding: 20px; }
+.box { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 0 auto 20px; max-width: 850px; }
+
+/* 입찰 조작부 */
+.quick-bid-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.q-btn { padding: 8px 15px; border: 2px solid #3498db; background: white; color: #3498db; border-radius: 6px; cursor: pointer; font-weight: bold; }
+.q-btn:hover { background: #3498db; color: white; }
+
+#bidInput { padding: 12px; font-size: 1.2em; width: 140px; border: 2px solid #ddd; border-radius: 6px; text-align: center; }
+#bidBtn { padding: 12px 25px; font-size: 1.2em; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+#bidBtn:disabled { background: #bdc3c7; }
+
+/* 플레이어 그리드 */
+#players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; }
+.player-card { background: #f8f9fa; padding: 15px; border-radius: 10px; border: 2px solid transparent; }
+.player-card.is-highest { border-color: #f1c40f; background: #fff9db; transform: translateY(-5px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+.player-name { font-weight: bold; display: block; }
+.player-points { color: #27ae60; font-size: 0.9em; }
+
+/* 타이머, 정보, 로그 */
+.item-title { font-size: 1.8em; color: #2c3e50; margin-bottom: 10px; font-weight: bold; }
+.timer { font-size: 3.5em; color: #e74c3c; font-weight: bold; margin: 10px 0; }
+.current-bid-box { margin-bottom:20px; padding:15px; background:#f1c40f; border-radius:8px; display:inline-block; width: 80%; }
+#messages { height: 120px; overflow-y: auto; border: 1px solid #eee; background: #fafafa; padding: 10px; font-size: 0.85em; text-align: left; border-radius: 6px; }
+
+/* 방장 전용 */
+.admin-box { border: 2px dashed #8e44ad; padding: 15px; margin-top: 15px; display: none; border-radius: 10px; }
+.admin-btn { padding: 15px 30px; font-size: 1.1em; background: #8e44ad; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.skip-btn { background: #e67e22 !important; margin-left: 10px; }
