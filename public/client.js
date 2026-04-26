@@ -1,7 +1,6 @@
 const socket = io();
 let myRole = '', myName = '', lastBid = 0; 
 
-// [로그인 및 입장]
 function enter() {
     const isAdmin = document.getElementById('isAdminCheck').checked;
     socket.emit('join', {
@@ -12,10 +11,8 @@ function enter() {
         if(res.success) {
             myRole = res.isRole;
             myName = res.username;
-            
             document.getElementById('login-area').style.display = 'none';
             document.getElementById('auction-area').style.display = 'block';
-            
             document.getElementById('admin-ui').style.display = (myRole === 'admin') ? 'block' : 'none';
             document.getElementById('user-ui').style.display = (myRole === 'player') ? 'block' : 'none';
         } else {
@@ -24,37 +21,26 @@ function enter() {
     });
 }
 
-// [간편 입찰 계산]
 function add(v) {
     const inputEl = document.getElementById('bidInput');
-    if (inputEl.value === '') {
-        inputEl.value = lastBid + v;
-    } else {
-        inputEl.value = parseInt(inputEl.value) + v;
-    }
+    inputEl.value = inputEl.value === '' ? lastBid + v : parseInt(inputEl.value) + v;
 }
 
-// [입찰 전송]
 function sendBid() {
     const val = parseInt(document.getElementById('bidInput').value);
     if(val > lastBid) {
         socket.emit('placeBid', val);
         document.getElementById('bidInput').value = '';
-    } else {
-        alert("현재 최고가보다 높아야 합니다.");
-    }
+    } else alert("현재 최고가보다 높아야 합니다.");
 }
 
-// [서버로부터 상태 동기화 받기]
 socket.on('updateState', (s) => {
     lastBid = s.highestBid;
     
-    // 텍스트 정보 업데이트
     document.getElementById('itemTitle').innerText = s.currentItem || "경매 대기 중";
     document.getElementById('curBid').innerText = s.highestBid;
     document.getElementById('curWinner').innerText = s.highestBidder || '-';
 
-    // 일반 유저 버튼 잠금 로직
     if (myRole === 'player') {
         const isBiddingPhase = (s.status === 'bidding');
         const amIHighestBidder = (myName === s.highestBidder); 
@@ -71,15 +57,13 @@ socket.on('updateState', (s) => {
             bidBtn.style.backgroundColor = "#3498db"; 
         }
 
-        const qBtns = document.querySelectorAll('.q-btn');
-        qBtns.forEach(btn => {
+        document.querySelectorAll('.q-btn').forEach(btn => {
             btn.disabled = shouldDisable;
             btn.style.opacity = shouldDisable ? '0.5' : '1';
             btn.style.cursor = shouldDisable ? 'not-allowed' : 'pointer';
         });
     }
 
-    // 8인 그리드 렌더링
     const grid = document.getElementById('players-grid');
     grid.innerHTML = '';
     const names = Object.keys(s.players);
@@ -91,30 +75,37 @@ socket.on('updateState', (s) => {
     }
 });
 
-// [타이머 동기화]
 socket.on('timerUpdate', (t) => {
     const timerEl = document.getElementById('timer');
     timerEl.innerText = t;
-    if (t <= 5) {
-        timerEl.style.color = "#ff0000";
-        timerEl.style.fontSize = "4.5em";
-    } else {
-        timerEl.style.color = "#e74c3c";
-        timerEl.style.fontSize = "3.5em";
-    }
+    timerEl.style.color = (t <= 5) ? "#ff0000" : "#e74c3c";
+    timerEl.style.fontSize = (t <= 5) ? "4.5em" : "3.5em";
 });
 
-// [시스템 로그]
 socket.on('systemMsg', (m) => {
     const d = document.getElementById('messages');
     d.innerHTML += `<div>${m}</div>`;
     d.scrollTop = d.scrollHeight;
 });
 
-function startNextAuction() {
-    socket.emit('startAuction');
-}
+socket.on('kicked', (targetUser) => {
+    if (myName === targetUser) {
+        alert("방장에 의해 강제 퇴장되었습니다.");
+        location.reload(); 
+    }
+});
 
-function skipCurrentAuction() {
-    socket.emit('skipAuction');
+// [방장 전용 호출 함수들]
+function startNextAuction() { socket.emit('startAuction'); }
+function skipCurrentAuction() { socket.emit('skipAuction'); }
+function selectItem() {
+    const item = document.getElementById('itemSelect').value;
+    if(item) socket.emit('selectItem', item);
+}
+function resetSystem() {
+    if(confirm("모든 점수와 매물 순서가 초기화됩니다. 진행하시겠습니까?")) socket.emit('resetAll');
+}
+function kickPlayer() {
+    const target = prompt("강퇴할 유저의 닉네임을 정확히 입력하세요:");
+    if (target) socket.emit('kickUser', target);
 }

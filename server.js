@@ -9,13 +9,10 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "314159";
+// 환경변수를 통한 비밀번호 설정 (깃허브에 노출되지 않음)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "1234";
 
-// 16개의 매물 배열 (순환 큐)
-let auctionItems = Array.from({length: 16}, (_, i) => `${i + 1}번 매물`);
-let roundCount = 0; 
-
-let auctionState = {
+const getInitialState = () => ({
     status: 'waiting',
     itemIndex: 0,
     currentItem: "",
@@ -23,12 +20,16 @@ let auctionState = {
     highestBidder: null,
     timeLeft: 30,
     players: {} 
-};
+});
 
+// 16개의 매물 배열 (순환 큐)
+let auctionItems = Array.from({length: 16}, (_, i) => `${i + 1}번 매물`);
+let auctionState = getInitialState();
 let timerInterval = null;
 
 io.on('connection', (socket) => {
     
+    // [1. 입장 로직]
     socket.on('join', (data, callback) => {
         const { role, username, password } = data;
         if (role === 'admin' && password === ADMIN_PASSWORD) {
@@ -49,11 +50,12 @@ io.on('connection', (socket) => {
         }
     });
 
+    // [2. 경매 시작]
     socket.on('startAuction', () => {
         if (socket.role !== 'admin' || auctionState.status === 'bidding') return;
         
         auctionState.status = 'bidding';
-        auctionState.currentItem = auctionItems[0]; // 항상 배열의 첫 번째 매물
+        auctionState.currentItem = auctionItems[0]; // 항상 큐의 맨 앞
         auctionState.highestBid = 0;
         auctionState.highestBidder = null;
         auctionState.timeLeft = 30; 
@@ -71,40 +73,36 @@ io.on('connection', (socket) => {
         }, 1000);
     });
 
-    // [1. 스킵 버튼: 시간을 0초로 만들고 낙찰/유찰 확정]
+    // [3. 스킵 및 경매 종료 (순환 큐 적용)]
     socket.on('skipAuction', () => {
         if (socket.role !== 'admin' || auctionState.status !== 'bidding') return;
-        io.emit('systemMsg', '⏰ 방장이 시간을 마감했습니다.');
+        io.emit('systemMsg', '⏰ 방장이 시간을 즉시 마감했습니다.');
         clearInterval(timerInterval);
         auctionState.timeLeft = 0;
         io.emit('timerUpdate', 0);
         endAuction(); 
     });
 
-    // [2. 경매 종료 로직: 무조건 매물을 16번 뒤로 보냄]
     function endAuction() {
         clearInterval(timerInterval);
         auctionState.status = 'sold';
         const winner = auctionState.highestBidder;
         
         if (winner) {
-            // 입찰자가 있을 때: 포인트 차감 후 메시지 출력
             auctionState.players[winner].points -= auctionState.highestBid;
             io.emit('systemMsg', `🎉 [${auctionState.currentItem}] ${winner}님에게 ${auctionState.highestBid}원에 낙찰!`);
         } else {
-            // 입찰자가 없을 때 (유찰)
             io.emit('systemMsg', `⚠️ [${auctionState.currentItem}] 입찰자 없음. 매물이 순서의 맨 뒤로 이동합니다.`);
         }
 
-        // 핵심: 결과와 상관없이 배열의 첫 번째 요소를 빼서 맨 뒤로 푸시 (O(n) shift/push)
+        // 결과와 무관하게 무조건 1번을 맨 뒤로 보냄 (순환)
         const itemToMove = auctionItems.shift();
         auctionItems.push(itemToMove);
-        roundCount++;
         
-        // 프론트엔드에 갱신된 상태(다음 매물 대기 상태) 전송
         io.emit('updateState', auctionState);
     }
 
+    // [4. 입찰 로직]
     socket.on('placeBid', (bidAmount) => {
         if (auctionState.status !== 'bidding' || socket.username === auctionState.highestBidder) return;
         const player = auctionState.players[socket.username];
@@ -120,6 +118,45 @@ io.on('connection', (socket) => {
         }
     });
 
+    // [5. 방장 관리 권한 (선택, 초기화, 강퇴)]
+    socket.on('selectItem', (itemName) => {
+        if (socket.role !== 'admin' || auctionState.status === 'bidding') return;
+        const idx = auctionItems.indexOf(itemName);
+        if (idx > -1) {
+            const [selected] = auctionItems.splice(idx, 1);
+            auctionItems.unshift(selected); // 선택한 매물을 맨 앞으로
+            auctionState.currentItem = selected;
+            io.emit('updateState', auctionState);
+            io.emit('systemMsg', `📢 방장이 다음 매물을 [${selected}]로 선택했습니다.`);
+        }
+    });
+
+    socket.on('resetAll', () => {
+        if (socket.role !== 'admin') return;
+        auctionItems = Array.from({length: 16}, (_, i) => `${i + 1}번 매물`);
+        for (let user in auctionState.players) {
+            auctionState.players[user].points = 1000;
+        }
+        const playersRef = auctionState.players;
+        auctionState = getInitialState();
+        auctionState.players = playersRef;
+        if (timerInterval) clearInterval(timerInterval);
+        
+        io.emit('updateState', auctionState);
+        io.emit('systemMsg', '⚠️ 시스템이 방장에 의해 전체 초기화되었습니다.');
+    });
+
+    socket.on('kickUser', (targetUser) => {
+        if (socket.role !== 'admin') return;
+        if (auctionState.players[targetUser]) {
+            delete auctionState.players[targetUser];
+            io.emit('kicked', targetUser);
+            io.emit('updateState', auctionState);
+            io.emit('systemMsg', `🚫 방장이 [${targetUser}]님을 강제 퇴장시켰습니다.`);
+        }
+    });
+
+    // [6. 연결 해제 처리]
     socket.on('disconnect', () => {
         if (socket.username && auctionState.players[socket.username]) {
             auctionState.players[socket.username].connected = false;
@@ -128,4 +165,5 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(3000, () => console.log('http://localhost:3000'));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

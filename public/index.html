@@ -42,8 +42,22 @@
         </div>
 
         <div id="admin-ui" class="admin-box">
+            <div style="margin-bottom: 15px;">
+                <select id="itemSelect" style="padding: 10px; border-radius: 6px;">
+                    <script>
+                        for(let i=1; i<=16; i++) document.write(`<option value="${i}번 매물">${i}번 매물</option>`);
+                    </script>
+                </select>
+                <button class="admin-btn" style="padding: 10px 15px; font-size: 0.9em; background: #34495e;" onclick="selectItem()">매물 확정</button>
+            </div>
+            
             <button class="admin-btn" onclick="startNextAuction()">경매 시작</button>
             <button class="admin-btn skip-btn" onclick="skipCurrentAuction()">현재 라운드 스킵</button>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: space-between;">
+                <button class="admin-btn" style="background: #e67e22; width: 48%; font-size: 1em;" onclick="kickPlayer()">유저 강퇴</button>
+                <button class="admin-btn" style="background: #c0392b; width: 48%; font-size: 1em;" onclick="resetSystem()">전체 초기화 (위험)</button>
+            </div>
         </div>
     </div>
 
