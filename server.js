@@ -9,7 +9,7 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const ADMIN_PASSWORD = "1234";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "314159";
 
 // 16개의 매물 배열 (순환 큐)
 let auctionItems = Array.from({length: 16}, (_, i) => `${i + 1}번 매물`);
