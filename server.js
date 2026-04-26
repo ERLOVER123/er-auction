@@ -39,7 +39,7 @@ io.on('connection', (socket) => {
         } else if (role === 'player' && username) {
             if (!auctionState.players[username]) {
                 if (Object.keys(auctionState.players).length >= 8) return callback({ success: false, message: '8인 정원 초과' });
-                auctionState.players[username] = { points: 1000, connected: true };
+                auctionState.players[username] = { points: 1000, connected: true, itemsWon: 0 };
             } else {
                 auctionState.players[username].connected = true;
             }
@@ -88,10 +88,11 @@ io.on('connection', (socket) => {
         auctionState.status = 'sold';
         const winner = auctionState.highestBidder;
         
-        if (winner) {
-            auctionState.players[winner].points -= auctionState.highestBid;
-            io.emit('systemMsg', `🎉 [${auctionState.currentItem}] ${winner}님에게 ${auctionState.highestBid}원에 낙찰!`);
-        } else {
+       if (winner) {
+   		auctionState.players[winner].points -= auctionState.highestBid;
+    		auctionState.players[winner].itemsWon += 1; // [추가] 낙찰 횟수 증가
+    		io.emit('systemMsg', `🎉 [${auctionState.currentItem}] ${winner}님에게 ${auctionState.highestBid}원에 낙찰!`);
+	}else {
             io.emit('systemMsg', `⚠️ [${auctionState.currentItem}] 입찰자 없음. 매물이 순서의 맨 뒤로 이동합니다.`);
         }
 
@@ -104,8 +105,9 @@ io.on('connection', (socket) => {
 
     // [4. 입찰 로직]
     socket.on('placeBid', (bidAmount) => {
-        if (auctionState.status !== 'bidding' || socket.username === auctionState.highestBidder) return;
-        const player = auctionState.players[socket.username];
+       	if (auctionState.status !== 'bidding' || socket.username === auctionState.highestBidder) return;
+   	 const player = auctionState.players[socket.username];
+	if (player.itemsWon >= 2) return;
         if (bidAmount > auctionState.highestBid && bidAmount <= player.points) {
             auctionState.highestBid = bidAmount;
             auctionState.highestBidder = socket.username;
@@ -135,8 +137,9 @@ io.on('connection', (socket) => {
         if (socket.role !== 'admin') return;
         auctionItems = Array.from({length: 16}, (_, i) => `${i + 1}번 매물`);
         for (let user in auctionState.players) {
-            auctionState.players[user].points = 1000;
-        }
+    		auctionState.players[user].points = 1000;
+    		auctionState.players[user].itemsWon = 0; // 초기화에 추가
+	}
         const playersRef = auctionState.players;
         auctionState = getInitialState();
         auctionState.players = playersRef;

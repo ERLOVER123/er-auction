@@ -41,15 +41,23 @@ socket.on('updateState', (s) => {
     document.getElementById('curBid').innerText = s.highestBid;
     document.getElementById('curWinner').innerText = s.highestBidder || '-';
 
-    if (myRole === 'player') {
+   if (myRole === 'player') {
         const isBiddingPhase = (s.status === 'bidding');
         const amIHighestBidder = (myName === s.highestBidder); 
+        const myInfo = s.players[myName];
+        const amIMaxedOut = myInfo && myInfo.itemsWon >= 2; // 내가 2명 꽉 찼는가?
         
-        const shouldDisable = !isBiddingPhase || amIHighestBidder;
+        // 경매중이 아니거나, 내가 1등이거나, 이미 2명을 다 샀으면 버튼 잠금
+        const shouldDisable = !isBiddingPhase || amIHighestBidder || amIMaxedOut;
         const bidBtn = document.getElementById('bidBtn');
         
         bidBtn.disabled = shouldDisable;
-        if (isBiddingPhase && amIHighestBidder) {
+        
+        // 상태에 따른 버튼 디자인 변경
+        if (amIMaxedOut) {
+            bidBtn.innerText = "구매 완료 (최대 2명)";
+            bidBtn.style.backgroundColor = "#7f8c8d"; // 비활성화 회색
+        } else if (isBiddingPhase && amIHighestBidder) {
             bidBtn.innerText = "현재 최고 입찰자";
             bidBtn.style.backgroundColor = "#27ae60"; 
         } else {
@@ -68,9 +76,18 @@ socket.on('updateState', (s) => {
     grid.innerHTML = '';
     const names = Object.keys(s.players);
     for(let i=0; i<8; i++) {
-        const n = names[i], card = document.createElement('div');
+        const n = names[i];
+        const card = document.createElement('div');
         card.className = 'player-card' + (s.highestBidder === n ? ' is-highest' : '');
-        card.innerHTML = n ? `<span class="player-name">${n}</span><span class="player-points">${s.players[n].points} P</span>` : `<span style="color:#ccc;">[비어있음]</span>`;
+        
+        // 포인트 옆에 획득한 매물 개수 표시 (예: 1000 P (1/2))
+        if (n) {
+            const pInfo = s.players[n];
+            card.innerHTML = `<span class="player-name">${n}</span>
+                              <span class="player-points">${pInfo.points} P <small style="color:#7f8c8d;">(${pInfo.itemsWon}/2)</small></span>`;
+        } else {
+            card.innerHTML = `<span style="color:#ccc;">[비어있음]</span>`;
+        }
         grid.appendChild(card);
     }
 });
