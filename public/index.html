@@ -42,8 +42,8 @@
         </div>
 
         <div id="admin-ui" class="admin-box">
-            <button class="admin-btn" onclick="socket.emit('startAuction')">경매 시작</button>
-            <button class="admin-btn skip-btn" onclick="socket.emit('skipAuction')">현재 라운드 스킵</button>
+            <button class="admin-btn" onclick="startNextAuction()">경매 시작</button>
+            <button class="admin-btn skip-btn" onclick="skipCurrentAuction()">현재 라운드 스킵</button>
         </div>
     </div>
 

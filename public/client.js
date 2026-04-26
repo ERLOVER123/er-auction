@@ -110,3 +110,11 @@ socket.on('systemMsg', (m) => {
     d.innerHTML += `<div>${m}</div>`;
     d.scrollTop = d.scrollHeight;
 });
+
+function startNextAuction() {
+    socket.emit('startAuction');
+}
+
+function skipCurrentAuction() {
+    socket.emit('skipAuction');
+}
