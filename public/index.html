@@ -45,7 +45,16 @@
             <div style="margin-bottom: 15px;">
                 <select id="itemSelect" style="padding: 10px; border-radius: 6px;">
                     <script>
-                        for(let i=1; i<=16; i++) document.write(`<option value="${i}번 매물">${i}번 매물</option>`);
+                        // 서버에 적은 것과 똑같은 이름 배열을 여기에 복사해 줍니다.
+                        const customItems = [
+                            "수아", "비앙카", "혜진", "일레븐", 
+   				 "바냐", "띠아", "샬럿", "혜진", 
+    				"리오", "니아", "로지", "슈린", 
+    				"시셀라", "엠마", "유스티나", "실비아"
+                        ];
+                        customItems.forEach(item => {
+                            document.write(`<option value="${item}">${item}</option>`);
+                        });
                     </script>
                 </select>
                 <button class="admin-btn" style="padding: 10px 15px; font-size: 0.9em; background: #34495e;" onclick="selectItem()">매물 확정</button>

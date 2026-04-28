@@ -23,7 +23,16 @@ const getInitialState = () => ({
 });
 
 // 16개의 매물 배열 (순환 큐)
-let auctionItems = Array.from({length: 16}, (_, i) => `${i + 1}번 매물`);
+// 🔥여기에 원하는 매물 이름을 16개 적어주세요. (나중에 여기서만 수정하면 됩니다)
+const INITIAL_ITEMS = [
+    "수아", "비앙카", "혜진", "일레븐", 
+    "바냐", "띠아", "샬럿", "혜진", 
+    "리오", "니아", "로지", "슈린", 
+    "시셀라", "엠마", "유스티나", "실비아"
+];
+
+// 16개의 매물 배열 (원본을 복사해서 순환 큐로 사용)
+let auctionItems = [...INITIAL_ITEMS];
 let auctionState = getInitialState();
 let timerInterval = null;
 
@@ -39,7 +48,8 @@ io.on('connection', (socket) => {
         } else if (role === 'player' && username) {
             if (!auctionState.players[username]) {
                 if (Object.keys(auctionState.players).length >= 8) return callback({ success: false, message: '8인 정원 초과' });
-                auctionState.players[username] = { points: 1000, connected: true, itemsWon: 0 };
+                // itemsWon: 0 뒤에 wonItems: [] 추가
+		auctionState.players[username] = { points: 1000, connected: true, itemsWon: 0, wonItems: [] };
             } else {
                 auctionState.players[username].connected = true;
             }
@@ -88,11 +98,12 @@ io.on('connection', (socket) => {
         auctionState.status = 'sold';
         const winner = auctionState.highestBidder;
         
-       if (winner) {
-   		auctionState.players[winner].points -= auctionState.highestBid;
-    		auctionState.players[winner].itemsWon += 1; // [추가] 낙찰 횟수 증가
-    		io.emit('systemMsg', `🎉 [${auctionState.currentItem}] ${winner}님에게 ${auctionState.highestBid}원에 낙찰!`);
-	}else {
+      if (winner) {
+   	 auctionState.players[winner].points -= auctionState.highestBid;
+   	 auctionState.players[winner].itemsWon += 1;
+    	auctionState.players[winner].wonItems.push(auctionState.currentItem); // [추가] 매물 이름 저장
+   	 io.emit('systemMsg', `🎉 [${auctionState.currentItem}] ${winner}님에게 ${auctionState.highestBid}원에 낙찰!`);
+}else {
             io.emit('systemMsg', `⚠️ [${auctionState.currentItem}] 입찰자 없음. 매물이 순서의 맨 뒤로 이동합니다.`);
         }
 
@@ -135,10 +146,11 @@ io.on('connection', (socket) => {
 
     socket.on('resetAll', () => {
         if (socket.role !== 'admin') return;
-        auctionItems = Array.from({length: 16}, (_, i) => `${i + 1}번 매물`);
-        for (let user in auctionState.players) {
-    		auctionState.players[user].points = 1000;
-    		auctionState.players[user].itemsWon = 0; // 초기화에 추가
+        auctionItems = [...INITIAL_ITEMS];
+       	for (let user in auctionState.players) {
+   		 auctionState.players[user].points = 1000;
+    		auctionState.players[user].itemsWon = 0;
+    		auctionState.players[user].wonItems = []; // [추가] 획득 목록 초기화
 	}
         const playersRef = auctionState.players;
         auctionState = getInitialState();

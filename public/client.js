@@ -81,11 +81,18 @@ socket.on('updateState', (s) => {
         card.className = 'player-card' + (s.highestBidder === n ? ' is-highest' : '');
         
         // 포인트 옆에 획득한 매물 개수 표시 (예: 1000 P (1/2))
-        if (n) {
-            const pInfo = s.players[n];
-            card.innerHTML = `<span class="player-name">${n}</span>
-                              <span class="player-points">${pInfo.points} P <small style="color:#7f8c8d;">(${pInfo.itemsWon}/2)</small></span>`;
-        } else {
+       if (n) {
+    const pInfo = s.players[n];
+    // wonItems 배열을 쉼표로 합쳐서 보여줍니다.
+    const itemsText = pInfo.wonItems.length > 0 ? pInfo.wonItems.join(', ') : '없음';
+
+    card.innerHTML = `
+        <span class="player-name">${n}</span>
+        <span class="player-points">${pInfo.points} P <small style="color:#7f8c8d;">(${pInfo.itemsWon}/2)</small></span>
+        <div style="font-size: 0.75em; color: #34495e; margin-top: 5px; min-height: 1.2em;">
+            📦 ${itemsText}
+        </div>`;
+}else {
             card.innerHTML = `<span style="color:#ccc;">[비어있음]</span>`;
         }
         grid.appendChild(card);
