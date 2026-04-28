@@ -28,12 +28,18 @@ function add(v) {
 
 function sendBid() {
     const val = parseInt(document.getElementById('bidInput').value);
-    if(val > lastBid) {
+    const curWinner = document.getElementById('curWinner').innerText;
+    
+    // 🔥 프론트엔드에서도 첫 0원 입찰을 허가해줌
+    const isFirstZero = (val === 0 && lastBid === 0 && curWinner === '-');
+    
+    if(val > lastBid || isFirstZero) {
         socket.emit('placeBid', val);
         document.getElementById('bidInput').value = '';
-    } else alert("현재 최고가보다 높아야 합니다.");
+    } else {
+        alert("현재 최고가보다 높아야 합니다.");
+    }
 }
-
 socket.on('updateState', (s) => {
     lastBid = s.highestBid;
     
