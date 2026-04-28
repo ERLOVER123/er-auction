@@ -93,26 +93,32 @@ io.on('connection', (socket) => {
         endAuction(); 
     });
 
-    function endAuction() {
+        function endAuction() {
         clearInterval(timerInterval);
         auctionState.status = 'sold';
         const winner = auctionState.highestBidder;
         
-      if (winner) {
-   	 auctionState.players[winner].points -= auctionState.highestBid;
-   	 auctionState.players[winner].itemsWon += 1;
-    	auctionState.players[winner].wonItems.push(auctionState.currentItem); // [추가] 매물 이름 저장
-   	 io.emit('systemMsg', `🎉 [${auctionState.currentItem}] ${winner}님에게 ${auctionState.highestBid}원에 낙찰!`);
-}else {
-            io.emit('systemMsg', `⚠️ [${auctionState.currentItem}] 입찰자 없음. 매물이 순서의 맨 뒤로 이동합니다.`);
+        // 1. 현재 진행한 매물을 큐(배열)에서 일단 뽑아냅니다.
+        const finishedItem = auctionItems.shift(); 
+        
+        if (winner) {
+            auctionState.players[winner].points -= auctionState.highestBid;
+            auctionState.players[winner].itemsWon += 1;
+            auctionState.players[winner].wonItems.push(finishedItem); // 매물 이름 저장
+            io.emit('systemMsg', `🎉 [${finishedItem}] ${winner}님에게 ${auctionState.highestBid}원에 낙찰!`);
+            
+            // 💡 [핵심 수정 포인트] 낙찰되었으므로 다시 push 하지 않습니다. (큐에서 영구 삭제)
+            
+        } else {
+            io.emit('systemMsg', `⚠️ [${finishedItem}] 입찰자 없음. 매물이 순서의 맨 뒤로 이동합니다.`);
+            
+            // 💡 [핵심 수정 포인트] 유찰되었으므로 큐의 맨 뒤로 다시 집어넣습니다.
+            auctionItems.push(finishedItem);
         }
-
-        // 결과와 무관하게 무조건 1번을 맨 뒤로 보냄 (순환)
-        const itemToMove = auctionItems.shift();
-        auctionItems.push(itemToMove);
         
         io.emit('updateState', auctionState);
     }
+
 
     // [4. 입찰 로직]
     socket.on('placeBid', (bidAmount) => {
