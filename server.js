@@ -63,7 +63,11 @@ io.on('connection', (socket) => {
     // [2. 경매 시작]
     socket.on('startAuction', () => {
         if (socket.role !== 'admin' || auctionState.status === 'bidding') return;
-        
+        // 🔥 [추가된 방어 코드] 남은 매물이 없으면 시작 차단
+        if (auctionItems.length === 0) {
+            io.emit('systemMsg', '🛑 남은 매물이 없습니다! 모든 경매가 종료되었습니다.');
+            return;
+		}
         auctionState.status = 'bidding';
         auctionState.currentItem = auctionItems[0]; // 항상 큐의 맨 앞
         auctionState.highestBid = 0;
