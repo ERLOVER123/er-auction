@@ -59,6 +59,11 @@ function sendBid() {
     // 🔥 프론트엔드에서도 첫 0원 입찰을 허가해줌
     const isFirstZero = (val === 0 && lastBid === 0 && curWinner === '-');
     
+// 🔥 [추가된 부분] 5포인트 단위 검사 (0원 입찰은 무사통과)
+    if (val % 5 !== 0 && !isFirstZero) {
+        alert("입찰은 5포인트 단위로만 가능합니다! (예: 5, 10, 15...)");
+        return;
+    }
     if(val > lastBid || isFirstZero) {
         socket.emit('placeBid', val);
         document.getElementById('bidInput').value = '';
