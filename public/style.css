@@ -23,3 +23,4 @@ body { font-family: 'Malgun Gothic', sans-serif; text-align: center; background-
 .admin-box { border: 2px dashed #8e44ad; padding: 15px; margin-top: 15px; display: none; border-radius: 10px; }
 .admin-btn { padding: 12px 20px; font-size: 1.1em; background: #8e44ad; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
 .skip-btn { background: #e67e22 !important; margin-left: 10px; }
+#allInBtn:hover { background: #c0392b; color: white; }
