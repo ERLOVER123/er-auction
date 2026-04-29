@@ -126,6 +126,7 @@ io.on('connection', (socket) => {
 
     // [4. 입찰 로직]
     socket.on('placeBid', (bidAmount) => {
+	if (!socket.username || !auctionState.players[socket.username]) return;
        	if (auctionState.status !== 'bidding' || socket.username === auctionState.highestBidder) return;
    	 const player = auctionState.players[socket.username];
 	if (player.itemsWon >= 2) return;
