@@ -25,33 +25,21 @@ function add(v) {
     const inputEl = document.getElementById('bidInput');
     inputEl.value = inputEl.value === '' ? lastBid + v : parseInt(inputEl.value) + v;
 }
-// 🔥 올인 로직 추가
+// 🔥 올인 로직 (숫자만 채워주기)
 function allIn() {
-    // 1. 현재 서버 상태 데이터(s)가 필요하므로 저장해둔 변수 사용 로직
-    // updateState 이벤트 안에서 전역으로 빼서 쓰거나 바로 계산합니다.
     const myInfo = auctionStateRef.players[myName]; 
     if (!myInfo) return;
 
     const myTotalPoints = myInfo.points;
 
     if (myTotalPoints <= 0) {
-        alert("올인할 포인트가 없습니다!");
+        alert("가진 포인트가 없습니다!");
         return;
     }
 
-    if (myTotalPoints <= lastBid) {
-        alert("현재 최고가보다 가진 포인트가 적어 올인할 수 없습니다.");
-        return;
-    }
-
-    if (confirm(`정말 전 재산(${myTotalPoints}P)을 올인하시겠습니까?`)) {
-        // 입력창 갱신
-        document.getElementById('bidInput').value = myTotalPoints;
-        // 확인 누르면 자비 없이 바로 쏴버림!
-        sendBid(); 
-    }
+    // 확인창이나 자동 전송 없이, 그냥 입력창에 내 남은 포인트만 딱 꽂아줍니다.
+    document.getElementById('bidInput').value = myTotalPoints;
 }
-
 function sendBid() {
     const val = parseInt(document.getElementById('bidInput').value);
     const curWinner = document.getElementById('curWinner').innerText;
