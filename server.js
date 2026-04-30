@@ -134,7 +134,7 @@ io.on('connection', (socket) => {
     	// 🔥 아무도 입찰하지 않은 0원 상태라면, 0원 입찰을 예외적으로 허용!
     	const isFirstZeroBid = (bidAmount === 0 && auctionState.highestBid === 0 && auctionState.highestBidder === null);
 	if (bidAmount % 5 !== 0 && !isFirstZeroBid) return;
-  	  if ((bidAmount > auctionState.수highestBid || isFirstZeroBid) && bidAmount <= player.points) {
+  	  if ((bidAmount > auctionState.highestBid || isFirstZeroBid) && bidAmount <= player.points) {
             auctionState.highestBid = bidAmount;
             auctionState.highestBidder = socket.username;
             if (auctionState.timeLeft <= 5) {

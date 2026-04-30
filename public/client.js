@@ -1,5 +1,5 @@
 const socket = io();
-let myRole = '', myName = '', lastBid = 0; auctionStateRef = {};
+let myRole = '', myName = '', lastBid = 0, auctionStateRef = {};
 
 function enter() {
     const isAdmin = document.getElementById('isAdminCheck').checked;
