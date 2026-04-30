@@ -25,10 +25,10 @@ const getInitialState = () => ({
 // 16개의 매물 배열 (순환 큐)
 // 🔥여기에 원하는 매물 이름을 16개 적어주세요. (나중에 여기서만 수정하면 됩니다)
 const INITIAL_ITEMS = [
-    "수아", "비앙카", "혜진", "일레븐", 
-    "바냐", "띠아", "샬럿", "마르티나", 
-    "리오", "니아", "로지", "슈린", 
-    "시셀라", "엠마", "유스티나", "실비아"
+    "1번매물", "2번매물", "3번매물", "4번매물", 
+    "5번매물", "6번매물", "7번매물", "8번매물", 
+    "9번매물", "10번매물", "11번매물", "12번매물", 
+    "13번매물", "14번매물", "15번매물", "16번매물"
 ];
 
 // 16개의 매물 배열 (원본을 복사해서 순환 큐로 사용)
@@ -134,7 +134,7 @@ io.on('connection', (socket) => {
     	// 🔥 아무도 입찰하지 않은 0원 상태라면, 0원 입찰을 예외적으로 허용!
     	const isFirstZeroBid = (bidAmount === 0 && auctionState.highestBid === 0 && auctionState.highestBidder === null);
 	if (bidAmount % 5 !== 0 && !isFirstZeroBid) return;
-  	  if ((bidAmount > auctionState.highestBid || isFirstZeroBid) && bidAmount <= player.points) {
+  	  if ((bidAmount > auctionState.수highestBid || isFirstZeroBid) && bidAmount <= player.points) {
             auctionState.highestBid = bidAmount;
             auctionState.highestBidder = socket.username;
             if (auctionState.timeLeft <= 5) {
