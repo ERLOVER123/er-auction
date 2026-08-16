@@ -175,7 +175,17 @@ socket.on('timerUpdate', (t) => {
 
 socket.on('systemMsg', (m) => {
     const d = document.getElementById('messages');
-    d.innerHTML += `<div>${m}</div>`;
+
+    // 메시지 DOM이 무한히 커지는 것을 방지
+    const msg = document.createElement('div');
+    msg.textContent = m;
+    d.appendChild(msg);
+
+    // 최대 100개까지만 유지
+    while (d.children.length > 100) {
+        d.removeChild(d.firstChild);
+    }
+
     d.scrollTop = d.scrollHeight;
 });
 
