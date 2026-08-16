@@ -59,36 +59,37 @@ function sendBid() {
         alert("현재 최고가보다 높아야 합니다.");
     }
 }
+// 플레이어 카드 DOM을 한 번만 만들어두고 재사용
+const playerCards = [];
+
 socket.on('updateState', (s) => {
-	auctionStateRef = s;
+    auctionStateRef = s;
     lastBid = s.highestBid;
-    
+
     document.getElementById('itemTitle').innerText = s.currentItem || "경매 대기 중";
     document.getElementById('curBid').innerText = s.highestBid;
     document.getElementById('curWinner').innerText = s.highestBidder || '-';
 
-   if (myRole === 'player') {
+    if (myRole === 'player') {
         const isBiddingPhase = (s.status === 'bidding');
-        const amIHighestBidder = (myName === s.highestBidder); 
+        const amIHighestBidder = (myName === s.highestBidder);
         const myInfo = s.players[myName];
-        const amIMaxedOut = myInfo && myInfo.itemsWon >= 2; // 내가 2명 꽉 찼는가?
-        
-        // 경매중이 아니거나, 내가 1등이거나, 이미 2명을 다 샀으면 버튼 잠금
+        const amIMaxedOut = myInfo && myInfo.itemsWon >= 2;
+
         const shouldDisable = !isBiddingPhase || amIHighestBidder || amIMaxedOut;
         const bidBtn = document.getElementById('bidBtn');
-        
+
         bidBtn.disabled = shouldDisable;
-        
-        // 상태에 따른 버튼 디자인 변경
+
         if (amIMaxedOut) {
             bidBtn.innerText = "구매 완료 (최대 2명)";
-            bidBtn.style.backgroundColor = "#7f8c8d"; // 비활성화 회색
+            bidBtn.style.backgroundColor = "#7f8c8d";
         } else if (isBiddingPhase && amIHighestBidder) {
             bidBtn.innerText = "현재 최고 입찰자";
-            bidBtn.style.backgroundColor = "#27ae60"; 
+            bidBtn.style.backgroundColor = "#27ae60";
         } else {
             bidBtn.innerText = "입찰하기";
-            bidBtn.style.backgroundColor = "#3498db"; 
+            bidBtn.style.backgroundColor = "#3498db";
         }
 
         document.querySelectorAll('.q-btn').forEach(btn => {
@@ -99,29 +100,67 @@ socket.on('updateState', (s) => {
     }
 
     const grid = document.getElementById('players-grid');
-    grid.innerHTML = '';
     const names = Object.keys(s.players);
-    for(let i=0; i<8; i++) {
-        const n = names[i];
-        const card = document.createElement('div');
-        card.className = 'player-card' + (s.highestBidder === n ? ' is-highest' : '');
-        
-        // 포인트 옆에 획득한 매물 개수 표시 (예: 1000 P (1/2))
-       if (n) {
-    const pInfo = s.players[n];
-    // wonItems 배열을 쉼표로 합쳐서 보여줍니다.
-    const itemsText = pInfo.wonItems.length > 0 ? pInfo.wonItems.join(', ') : '없음';
 
-    card.innerHTML = `
-        <span class="player-name">${n}</span>
-        <span class="player-points">${pInfo.points} P <small style="color:#7f8c8d;">(${pInfo.itemsWon}/2)</small></span>
-        <div style="font-size: 0.75em; color: #34495e; margin-top: 5px; min-height: 1.2em;">
-            📦 ${itemsText}
-        </div>`;
-}else {
-            card.innerHTML = `<span style="color:#ccc;">[비어있음]</span>`;
+    // 카드가 아직 만들어지지 않았다면 딱 한 번 생성
+    if (playerCards.length === 0) {
+        for (let i = 0; i < 8; i++) {
+            const card = document.createElement('div');
+            card.className = 'player-card';
+
+            const nameEl = document.createElement('span');
+            nameEl.className = 'player-name';
+
+            const pointsEl = document.createElement('span');
+            pointsEl.className = 'player-points';
+
+            const itemsEl = document.createElement('div');
+            itemsEl.style.fontSize = '0.75em';
+            itemsEl.style.color = '#34495e';
+            itemsEl.style.marginTop = '5px';
+            itemsEl.style.minHeight = '1.2em';
+
+            card.appendChild(nameEl);
+            card.appendChild(pointsEl);
+            card.appendChild(itemsEl);
+            grid.appendChild(card);
+
+            playerCards.push({
+                card,
+                nameEl,
+                pointsEl,
+                itemsEl
+            });
         }
-        grid.appendChild(card);
+    }
+
+    // 기존 카드의 내용만 변경
+    for (let i = 0; i < 8; i++) {
+        const ui = playerCards[i];
+        const n = names[i];
+
+        if (n) {
+            const pInfo = s.players[n];
+            const itemsText = pInfo.wonItems.length > 0
+                ? pInfo.wonItems.join(', ')
+                : '없음';
+
+            ui.nameEl.innerText = n;
+            ui.pointsEl.innerHTML =
+                `${pInfo.points} P <small style="color:#7f8c8d;">(${pInfo.itemsWon}/2)</small>`;
+            ui.itemsEl.innerText = `📦 ${itemsText}`;
+
+            ui.card.className =
+                'player-card' + (s.highestBidder === n ? ' is-highest' : '');
+        } else {
+            ui.nameEl.innerText = '';
+            ui.pointsEl.innerText = '';
+            ui.itemsEl.innerText = '';
+            ui.card.className = 'player-card';
+
+            ui.nameEl.innerText = '[비어있음]';
+            ui.nameEl.style.color = '#ccc';
+        }
     }
 });
 
